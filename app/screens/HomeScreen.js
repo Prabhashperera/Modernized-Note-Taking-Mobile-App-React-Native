@@ -29,23 +29,32 @@ export default function HomeScreen({ navigation }) {
   }, [user]);
 
   const deleteNote = async (id) => {
-    Alert.alert("Delete Note", "This action cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: async () => {
-          try { await deleteDoc(doc(db, "notes", id)); } 
-          catch (e) { Alert.alert("Error", "Could not delete"); }
-      }}
-    ]);
+    console.log("Attempting to delete ID:", id);
+    
+    try {
+      const docRef = doc(db, "notes", id);
+      await deleteDoc(docRef);
+      console.log("✅ Deleted successfully from Firestore");
+    } catch (e) {
+      // This will print the exact Firebase Error (like 'Permission Denied')
+      console.error("❌ Firestore Delete Error:", e.code, e.message);
+      Alert.alert("Delete Failed", "Reason: " + e.code);
+    }
   };
 
-  const renderNote = ({ item }) => (
-    <TouchableOpacity 
-      onPress={() => navigation.navigate("AddNote", { existingNote: item })}
-      activeOpacity={0.7}
-      className="bg-white p-5 rounded-[20px] mb-3 mx-6 shadow-sm shadow-slate-300 border border-slate-100"
-    >
-      <View className="flex-row justify-between items-start">
-        <View className="flex-1 mr-4">
+const renderNote = ({ item }) => (
+  <View key={item.id} className="mx-6 mb-3 flex-row items-center justify-between"> 
+    {/* Use a View wrapper for the card to prevent touch competition */}
+    <View className="flex-1">
+      <TouchableOpacity 
+        onPress={() => {
+          console.log("Opening note:", item.id);
+          navigation.navigate("AddNote", { existingNote: item });
+        }}
+        activeOpacity={0.7}
+        className="bg-white p-5 rounded-[20px] shadow-sm shadow-slate-300 border border-slate-100"
+      >
+        <View>
           {item.title ? (
             <Text className="text-lg font-bold text-slate-800 mb-1" numberOfLines={1}>
               {item.title}
@@ -55,25 +64,32 @@ export default function HomeScreen({ navigation }) {
             {item.text}
           </Text>
         </View>
-        
-        <TouchableOpacity 
-          onPress={() => deleteNote(item.id)}
-          className="bg-slate-50 h-8 w-8 rounded-full items-center justify-center"
-        >
-          <Text className="text-red-400 font-bold text-xs">✕</Text>
-        </TouchableOpacity>
-      </View>
 
-      <View className="mt-3 flex-row items-center">
-        <View className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2" />
-        <Text className="text-slate-300 text-[10px] font-semibold uppercase tracking-tighter">
-          {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString(undefined, { 
-            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-          }) : "Just now"}
-        </Text>
-      </View>
+        <View className="mt-3 flex-row items-center">
+          <View className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2" />
+          <Text className="text-slate-300 text-[10px] font-semibold uppercase tracking-tighter">
+            {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : "Just now"}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    </View>
+
+    {/* SEPARATE DELETE BUTTON */}
+    <TouchableOpacity 
+      onPress={() => {
+        console.log("Delete triggered for:", item.id);
+        deleteNote(item.id);
+      }}
+      // hitSlop is essential for small buttons
+      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+      className="ml-3 bg-red-100 h-12 w-12 rounded-full items-center justify-center" 
+      style={{ zIndex: 999, elevation: 5 }} // Force it to the top layer
+    >
+      <Text className="text-red-600 font-bold text-xl">✕</Text>
     </TouchableOpacity>
-  );
+  </View>
+);
+
 
   return (
     <SafeAreaView className="flex-1 bg-[#FBFBFE]">
