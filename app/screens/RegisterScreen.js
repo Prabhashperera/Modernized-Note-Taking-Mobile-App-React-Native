@@ -83,7 +83,7 @@ export default function RegisterScreen({ navigation }) {
         {/* Inputs Area */}
         <View className="space-y-5">
           {/* Email Input - Glass Effect */}
-          <View className="flex-row items-center bg-white/5 rounded-2xl border border-white/10 px-4 py-1 mb-5">
+          <View className="flex-row items-center bg-white/5 rounded-2xl border border-white/10 px-4 mb-5">
             <Ionicons name="mail-outline" size={20} color="#64748b" style={{ marginRight: 10 }} />
             <TextInput
               placeholder="Email Address"
