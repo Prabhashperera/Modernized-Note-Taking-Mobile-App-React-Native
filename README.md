@@ -1,50 +1,84 @@
-# Welcome to your Expo app 👋
+# QuickNotes - Modern Vision Pro Styled Note App 📝✨
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![React Native](https://img.shields.io/badge/React_Native-Expo-000000?style=flat&logo=react&logoColor=61DAFB) ![Firebase](https://img.shields.io/badge/Firebase-Firestore%20%26%20Auth-FFCA28?style=flat&logo=firebase&logoColor=black)
 
-## Get started
+A futuristic, cross-platform mobile application for managing personal notes. Built with React Native (Expo) and styled with a "Vision Pro" inspired glassmorphism theme, this app features real-time synchronization, biometric-style authentication, and AI-powered text-to-speech.
 
-1. Install dependencies
+## 📱 Features
 
-   ```bash
-   npm install
-   ```
+* **🔐 Secure Authentication:** User registration and login powered by Firebase Authentication.
+* **☁️ Real-time Cloud Storage:** All notes are synced instantly across devices using Cloud Firestore.
+* **🎨 Vision Pro UI:** A stunning dark mode interface with glassmorphism cards, neon accents, and fluid animations.
+* **📌 Pinned Notes:** Keep your most important thoughts at the top of the list with a golden pin toggle.
+* **🔍 Instant Search:** Filter through your notes in real-time with a sleek glass search bar.
+* **🗣️ AI Read Aloud:** Listen to your notes with a futuristic text-to-speech feature.
+* **🎤 Voice Dictation Support:** Integrated microphone trigger for easy voice typing.
+* **📤 Native Sharing:** Share your notes directly to WhatsApp, Email, or other apps.
 
-2. Start the app
+## 🛠 Tech Stack
 
-   ```bash
-   npx expo start
-   ```
+* **Frontend Framework:** React Native (Expo SDK 52)
+* **Language:** JavaScript / React
+* **Styling:** NativeWind (Tailwind CSS for React Native)
+* **Backend / Database:** Firebase Firestore
+* **Authentication:** Firebase Auth
+* **Navigation:** React Navigation (Native Stack)
+* **Icons:** Ionicons (@expo/vector-icons)
+* **Speech:** Expo Speech
 
-In the output, you'll find options to open the app in a
+## 🚀 Setup & Installation
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+Follow these instructions to run the project locally on your machine.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Prerequisites
+* Node.js installed (v18 or higher recommended)
+* Expo Go app installed on your iOS or Android device
 
-## Get a fresh project
+### Installation Steps
 
-When you're ready, run:
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/PrabashPerera/modernized-note-taking-mobile-app-react-native.git](https://github.com/PrabashPerera/modernized-note-taking-mobile-app-react-native.git)
+    cd quicknotes
+    ```
 
-```bash
-npm run reset-project
-```
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+    *If you encounter peer dependency warnings, you can try `npm install --legacy-peer-deps`*
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+3.  **Configure Firebase:**
+    * Create a `firebase.js` file in the `app/` directory if it doesn't exist (it should be included in the repo, but ensure your API keys are valid).
+    * Ensure your Firestore security rules allow reads/writes for authenticated users.
 
-## Learn more
+4.  **Start the application:**
+    ```bash
+    npx expo start --clear
+    ```
 
-To learn more about developing your project with Expo, look at the following resources:
+5.  **Run on Device:**
+    * Scan the QR code displayed in the terminal using the **Expo Go** app on your phone.
+    * Alternatively, press `a` for Android Emulator or `i` for iOS Simulator.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📂 Project Structure
+<img width="792" height="517" alt="Screenshot 2026-02-17 014509" src="https://github.com/user-attachments/assets/ff3701af-9666-4b2f-b62a-eefdf948d033" />
 
-## Join the community
+## 🤝 Contributing
 
-Join our community of developers creating universal apps.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+1.  Fork the project
+2.  Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3.  Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4.  Push to the Branch (`git push origin feature/AmazingFeature`)
+5.  Open a Pull Request
+
+## 👤 Author
+
+**Prabash M Perera**
+* **GitHub:** [PrabashPerera](https://github.com/PrabashPerera)
+* **Role:** Full-Stack Developer Student
+
+---
+*Developed for Module ITS 2127 - Advanced Mobile Developer (AMD)*
