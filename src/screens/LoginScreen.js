@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import { Button, TextInput, View } from "react-native";
-import { AuthContext } from "../AuthContext";
+import { AuthContext } from "../Authcontext.js";
 
 export default function LoginScreen({ navigation }) {
   const { login } = useContext(AuthContext);
