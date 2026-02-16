@@ -7,7 +7,7 @@ import {
   Alert, FlatList,
   Share,
   StatusBar,
-  Text, TouchableOpacity, View
+  Text, TextInput, TouchableOpacity, View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AuthContext } from "../Authcontext";
@@ -15,6 +15,7 @@ import { db } from "../firebase";
 
 export default function HomeScreen({ navigation }) {
   const [notes, setNotes] = useState([]);
+  const [searchText, setSearchText] = useState(""); // [1] New State for Search
   const { logout, user } = useContext(AuthContext);
 
   useEffect(() => {
@@ -29,6 +30,14 @@ export default function HomeScreen({ navigation }) {
     });
     return unsubscribe;
   }, [user]);
+
+  // [2] Search Logic: Filter notes locally
+  const filteredNotes = notes.filter((note) => {
+    const term = searchText.toLowerCase();
+    const title = note.title?.toLowerCase() || "";
+    const text = note.text?.toLowerCase() || "";
+    return title.includes(term) || text.includes(term);
+  });
 
   const onShare = async (title, text) => {
     try {
@@ -63,10 +72,9 @@ export default function HomeScreen({ navigation }) {
       <TouchableOpacity
         onPress={() => navigation.navigate("AddNote", { existingNote: item })}
         activeOpacity={0.7}
-        // VISION PRO STYLE CARD: Dark semi-transparent background with white border
         className="bg-white/10 p-5 rounded-[24px] border border-white/20 relative"
       >
-        {/* DELETE BUTTON (Top Right) */}
+        {/* DELETE BUTTON */}
         <TouchableOpacity
           onPress={() => deleteNote(item.id)}
           hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
@@ -82,7 +90,6 @@ export default function HomeScreen({ navigation }) {
               {item.title}
             </Text>
           ) : null}
-          
           <Text className="text-slate-300 leading-5 text-sm font-light" numberOfLines={3}>
             {item.text}
           </Text>
@@ -90,8 +97,6 @@ export default function HomeScreen({ navigation }) {
 
         {/* FOOTER */}
         <View className="mt-4 flex-row items-center justify-between border-t border-white/10 pt-3">
-          
-          {/* Date Indicator */}
           <View className="flex-row items-center">
             <View className="h-1.5 w-1.5 rounded-full bg-cyan-400 mr-2 shadow-[0_0_10px_cyan]" />
             <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
@@ -101,7 +106,6 @@ export default function HomeScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* NEON SHARE BUTTON */}
           <TouchableOpacity
             onPress={() => onShare(item.title, item.text)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -110,19 +114,17 @@ export default function HomeScreen({ navigation }) {
             <Ionicons name="share-social-outline" size={14} color="#22d3ee" />
             <Text className="text-cyan-400 font-bold text-[10px] ml-1">SHARE</Text>
           </TouchableOpacity>
-
         </View>
       </TouchableOpacity>
     </View>
   );
 
   return (
-    // VISION PRO BACKGROUND: Deep Dark Blue/Black
     <SafeAreaView className="flex-1 bg-[#0f172a]">
       <StatusBar barStyle="light-content" />
       
       {/* Header */}
-      <View className="px-8 pt-4 pb-6 flex-row justify-between items-center">
+      <View className="px-8 pt-4 flex-row justify-between items-center">
         <View>
           <Text className="text-slate-400 text-xs font-medium uppercase tracking-[3px] mb-1">Workspace</Text>
           <Text className="text-4xl font-thin text-white tracking-tighter">
@@ -137,27 +139,47 @@ export default function HomeScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* List */}
+      {/* [3] GLASS SEARCH BAR */}
+      <View className="mx-6 mt-6 mb-2">
+        <View className="flex-row items-center bg-white/5 border border-white/10 rounded-2xl px-4">
+          <Ionicons name="search-outline" size={20} color="#64748b" style={{ marginRight: 10 }} />
+          <TextInput
+            placeholder="Search notes..."
+            placeholderTextColor="#64748b"
+            value={searchText}
+            onChangeText={setSearchText}
+            className="flex-1 text-white text-base font-light"
+            selectionColor="#22d3ee"
+          />
+          {searchText.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchText("")}>
+               <Ionicons name="close-circle" size={18} color="#64748b" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      {/* List - Using filteredNotes instead of notes */}
       <FlatList
-        data={notes}
+        data={filteredNotes} 
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
         renderItem={renderNote}
         ListEmptyComponent={
-          <View className="mt-32 items-center px-10 opacity-50">
-            <Ionicons name="planet-outline" size={60} color="#64748b" />
-            <Text className="text-slate-500 text-center font-light mt-4">Space is empty.</Text>
-            <Text className="text-slate-600 text-center text-xs uppercase tracking-widest mt-1">Tap + to create</Text>
+          <View className="mt-20 items-center px-10 opacity-50">
+            <Ionicons name={searchText ? "search" : "planet-outline"} size={60} color="#64748b" />
+            <Text className="text-slate-500 text-center font-light mt-4">
+              {searchText ? "No matches found." : "Space is empty."}
+            </Text>
           </View>
         }
       />
 
-      {/* GLASS FAB */}
+      {/* FAB */}
       <View className="absolute bottom-10 w-full items-center">
         <TouchableOpacity
           onPress={() => navigation.navigate("AddNote")}
           activeOpacity={0.9}
-          // Glowing button with blur effect logic
           className="bg-cyan-500 h-16 px-8 rounded-full flex-row items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] border border-cyan-400"
         >
           <Ionicons name="add" size={28} color="white" />
