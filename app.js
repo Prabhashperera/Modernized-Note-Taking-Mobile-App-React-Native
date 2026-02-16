@@ -1,7 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useContext } from "react";
-// Ensure this matches your file name exactly: Authcontext.js
+// FIX: Changed "./app" to "./src" to match your renamed folder
 import { AuthContext, AuthProvider } from "./app/Authcontext";
 import HomeScreen from "./app/screens/HomeScreen";
 import LoginScreen from "./app/screens/LoginScreen";
