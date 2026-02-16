@@ -28,64 +28,79 @@ export default function HomeScreen({ navigation }) {
     return unsubscribe;
   }, [user]);
 
-  const deleteNote = async (id) => {
-    console.log("Attempting to delete ID:", id);
-    
-    try {
-      const docRef = doc(db, "notes", id);
-      await deleteDoc(docRef);
-      console.log("✅ Deleted successfully from Firestore");
-    } catch (e) {
-      // This will print the exact Firebase Error (like 'Permission Denied')
-      console.error("❌ Firestore Delete Error:", e.code, e.message);
-      Alert.alert("Delete Failed", "Reason: " + e.code);
-    }
-  };
+const deleteNote = async (id) => {
+  // 1. First, show the confirmation dialog
+  Alert.alert(
+    "Delete Note", // Title
+    "Are you sure you want to delete this note? This action cannot be undone.", // Message
+    [
+      {
+        text: "Cancel",
+        onPress: () => console.log("Deletion cancelled"),
+        style: "cancel", // This makes it look like a secondary action on iOS
+      },
+      {
+        text: "Delete",
+        style: "destructive", // This makes the button red on iOS
+        onPress: async () => {
+          // 2. This only runs if the user clicks "Delete"
+          console.log("Attempting to delete ID:", id);
+          try {
+            const docRef = doc(db, "notes", id);
+            await deleteDoc(docRef);
+            console.log("✅ Deleted successfully from Firestore");
+          } catch (e) {
+            console.error("❌ Firestore Delete Error:", e.code, e.message);
+            Alert.alert("Delete Failed", "Reason: " + e.code);
+          }
+        },
+      },
+    ]
+  );
+};
 
 const renderNote = ({ item }) => (
-  <View key={item.id} className="mx-6 mb-3 flex-row items-center justify-between"> 
-    {/* Use a View wrapper for the card to prevent touch competition */}
-    <View className="flex-1">
-      <TouchableOpacity 
-        onPress={() => {
-          console.log("Opening note:", item.id);
-          navigation.navigate("AddNote", { existingNote: item });
-        }}
-        activeOpacity={0.7}
-        className="bg-white p-5 rounded-[20px] shadow-sm shadow-slate-300 border border-slate-100"
-      >
-        <View>
-          {item.title ? (
-            <Text className="text-lg font-bold text-slate-800 mb-1" numberOfLines={1}>
-              {item.title}
-            </Text>
-          ) : null}
-          <Text className="text-slate-500 leading-5 text-sm" numberOfLines={2}>
-            {item.text}
-          </Text>
-        </View>
-
-        <View className="mt-3 flex-row items-center">
-          <View className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2" />
-          <Text className="text-slate-300 text-[10px] font-semibold uppercase tracking-tighter">
-            {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : "Just now"}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    </View>
-
-    {/* SEPARATE DELETE BUTTON */}
-    <TouchableOpacity 
+  <View key={item.id} className="mx-6 mb-4">
+    <TouchableOpacity
       onPress={() => {
-        console.log("Delete triggered for:", item.id);
-        deleteNote(item.id);
+        console.log("Opening note:", item.id);
+        navigation.navigate("AddNote", { existingNote: item });
       }}
-      // hitSlop is essential for small buttons
-      hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
-      className="ml-3 bg-red-100 h-12 w-12 rounded-full items-center justify-center" 
-      style={{ zIndex: 999, elevation: 5 }} // Force it to the top layer
+      activeOpacity={0.8}
+      className="bg-white p-5 rounded-[24px] shadow-sm shadow-slate-200 border border-slate-100 relative"
     >
-      <Text className="text-red-600 font-bold text-xl">✕</Text>
+      {/* Small Delete Button in Top Corner */}
+      <TouchableOpacity
+        onPress={() => deleteNote(item.id)}
+        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+        className="absolute top-3 right-3 bg-slate-50 h-7 w-7 rounded-full items-center justify-center z-50 border border-slate-100"
+      >
+        <Text className="text-slate-400 font-bold text-[10px]">✕</Text>
+      </TouchableOpacity>
+
+      {/* Content Area */}
+      <View className="pr-6"> 
+        {/* pr-6 ensures text doesn't overlap the X button */}
+        {item.title ? (
+          <Text className="text-lg font-bold text-slate-800 mb-1" numberOfLines={1}>
+            {item.title}
+          </Text>
+        ) : null}
+        
+        <Text className="text-slate-500 leading-5 text-sm" numberOfLines={3}>
+          {item.text}
+        </Text>
+      </View>
+
+      {/* Footer (Date) */}
+      <View className="mt-4 flex-row items-center">
+        <View className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2 shadow-sm shadow-blue-400" />
+        <Text className="text-slate-300 text-[10px] font-bold uppercase tracking-widest">
+          {item.createdAt?.toDate 
+            ? item.createdAt.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) 
+            : "Just now"}
+        </Text>
+      </View>
     </TouchableOpacity>
   </View>
 );
