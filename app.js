@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useContext } from "react";
 // FIX: Changed "./app" to "./src" to match your renamed folder
 import { AuthContext, AuthProvider } from "./app/Authcontext";
+import AddNoteScreen from "./app/screens/AddNoteScreen"; // <--- Import this
 import HomeScreen from "./app/screens/HomeScreen";
 import LoginScreen from "./app/screens/LoginScreen";
 import RegisterScreen from "./app/screens/RegisterScreen";
@@ -16,7 +17,10 @@ function Routes() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }} >
       {user ? (
+        <>
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="AddNote" component={AddNoteScreen} />
+        </>
       ) : (
         <>
           <Stack.Screen name="Login" component={LoginScreen} />

@@ -1,118 +1,122 @@
-import { addDoc, collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import {
+  collection, deleteDoc, doc, onSnapshot, orderBy, query, where
+} from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 import {
-  Alert,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+  Alert, FlatList,
+  StatusBar,
+  Text, TouchableOpacity, View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AuthContext } from "../Authcontext";
 import { db } from "../firebase";
 
-// CRITICAL: You must import AuthContext to use it
-import { AuthContext } from "../Authcontext";
-
-export default function HomeScreen() {
-  const [note, setNote] = useState("");
+export default function HomeScreen({ navigation }) {
   const [notes, setNotes] = useState([]);
-  
-  // Now this will work because of the import above
-  const { logout } = useContext(AuthContext);
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (error) {
-      Alert.alert("Logout Error", error.message);
-    }
-  };
+  const { logout, user } = useContext(AuthContext);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, "notes"), (snapshot) => {
-      const newNotes = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setNotes(newNotes);
+    if (!user) return;
+    const q = query(
+      collection(db, "notes"),
+      where("userId", "==", user.uid),
+      orderBy("createdAt", "desc")
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setNotes(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
     });
     return unsubscribe;
-  }, []);
-
-  const addNote = async () => {
-    if (note.trim() === "") return;
-    try {
-      await addDoc(collection(db, "notes"), {
-        text: note,
-        createdAt: new Date()
-      });
-      setNote("");
-    } catch (e) {
-      Alert.alert("Error", "Could not save note");
-    }
-  };
+  }, [user]);
 
   const deleteNote = async (id) => {
-    try {
-      await deleteDoc(doc(db, "notes", id));
-    } catch (e) {
-      Alert.alert("Error", "Could not delete note");
-    }
+    Alert.alert("Delete Note", "This action cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", style: "destructive", onPress: async () => {
+          try { await deleteDoc(doc(db, "notes", id)); } 
+          catch (e) { Alert.alert("Error", "Could not delete"); }
+      }}
+    ]);
   };
 
-  return (
-    <SafeAreaView className="flex-1 bg-gray-100">
-      {/* Header with Tailwind */}
-      <View className="flex-row justify-between items-center p-6 bg-white border-b border-gray-200 shadow-sm">
-        <Text className="text-3xl font-bold text-gray-800">My Notes</Text>
+  const renderNote = ({ item }) => (
+    <TouchableOpacity 
+      onPress={() => navigation.navigate("AddNote", { existingNote: item })}
+      activeOpacity={0.7}
+      className="bg-white p-5 rounded-[20px] mb-3 mx-6 shadow-sm shadow-slate-300 border border-slate-100"
+    >
+      <View className="flex-row justify-between items-start">
+        <View className="flex-1 mr-4">
+          {item.title ? (
+            <Text className="text-lg font-bold text-slate-800 mb-1" numberOfLines={1}>
+              {item.title}
+            </Text>
+          ) : null}
+          <Text className="text-slate-500 leading-5 text-sm" numberOfLines={2}>
+            {item.text}
+          </Text>
+        </View>
+        
         <TouchableOpacity 
-          onPress={handleLogout}
-          className="bg-red-50 px-4 py-2 rounded-xl border border-red-100"
+          onPress={() => deleteNote(item.id)}
+          className="bg-slate-50 h-8 w-8 rounded-full items-center justify-center"
         >
-          <Text className="text-red-500 font-bold text-sm">Sign Out</Text>
+          <Text className="text-red-400 font-bold text-xs">✕</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Notes List */}
+      <View className="mt-3 flex-row items-center">
+        <View className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2" />
+        <Text className="text-slate-300 text-[10px] font-semibold uppercase tracking-tighter">
+          {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString(undefined, { 
+            month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+          }) : "Just now"}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+
+  return (
+    <SafeAreaView className="flex-1 bg-[#FBFBFE]">
+      <StatusBar barStyle="dark-content" />
+      
+      {/* Modern Header */}
+      <View className="px-8 pt-4 pb-4 flex-row justify-between items-center">
+        <View>
+          <Text className="text-3xl font-black text-slate-900 tracking-tight">My Notes</Text>
+          <Text className="text-slate-400 text-xs font-medium">{notes.length} saved entries</Text>
+        </View>
+        <TouchableOpacity 
+          onPress={logout}
+          className="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm"
+        >
+          <Text className="text-[10px] font-black text-slate-500 uppercase">Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* List View (Line by Line) */}
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
-        renderItem={({ item }) => (
-          <View className="bg-white p-4 rounded-2xl mb-4 flex-row justify-between items-center shadow-sm border border-gray-100">
-            <Text className="text-gray-700 text-lg flex-1 mr-4">{item.text}</Text>
-            <TouchableOpacity 
-              onPress={() => deleteNote(item.id)} 
-              className="bg-gray-100 p-2 rounded-lg"
-            >
-              <Text className="text-red-400 font-bold">Delete</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
+        renderItem={renderNote}
         ListEmptyComponent={
-          <Text className="text-center text-gray-400 mt-10">No notes yet. Add one below!</Text>
+          <View className="mt-32 items-center px-10">
+            <Text className="text-slate-300 text-center font-medium">No notes here yet.</Text>
+          </View>
         }
       />
 
-      {/* Input Area */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="absolute bottom-0 w-full bg-white p-4 border-t border-gray-200 flex-row items-center"
-      >
-        <TextInput
-          className="flex-1 bg-gray-100 rounded-2xl px-5 py-4 text-gray-800 mr-3 text-lg"
-          placeholder="Write a new note..."
-          placeholderTextColor="#9ca3af"
-          value={note}
-          onChangeText={setNote}
-        />
-        <TouchableOpacity 
-          onPress={addNote} 
-          className="bg-blue-600 w-14 h-14 rounded-2xl justify-center items-center shadow-lg"
+      {/* Modern Floating Action Button */}
+      <View className="absolute bottom-10 w-full items-center">
+        <TouchableOpacity
+          onPress={() => navigation.navigate("AddNote")}
+          activeOpacity={0.9}
+          className="bg-blue-600 h-16 px-8 rounded-3xl flex-row items-center justify-center shadow-xl shadow-blue-400"
         >
-          <Text className="text-white text-3xl font-bold">+</Text>
+          <Text className="text-white text-3xl mr-3">+</Text>
+          <Text className="text-white font-extrabold text-sm uppercase tracking-widest">New Entry</Text>
         </TouchableOpacity>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }
