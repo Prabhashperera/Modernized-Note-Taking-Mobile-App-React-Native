@@ -1,9 +1,11 @@
+import { Ionicons } from '@expo/vector-icons';
 import {
   collection, deleteDoc, doc, onSnapshot, orderBy, query, where
 } from "firebase/firestore";
 import { useContext, useEffect, useState } from "react";
 import {
   Alert, FlatList,
+  Share,
   StatusBar,
   Text, TouchableOpacity, View
 } from "react-native";
@@ -28,124 +30,138 @@ export default function HomeScreen({ navigation }) {
     return unsubscribe;
   }, [user]);
 
-const deleteNote = async (id) => {
-  // 1. First, show the confirmation dialog
-  Alert.alert(
-    "Delete Note", // Title
-    "Are you sure you want to delete this note? This action cannot be undone.", // Message
-    [
-      {
-        text: "Cancel",
-        onPress: () => console.log("Deletion cancelled"),
-        style: "cancel", // This makes it look like a secondary action on iOS
-      },
-      {
-        text: "Delete",
-        style: "destructive", // This makes the button red on iOS
-        onPress: async () => {
-          // 2. This only runs if the user clicks "Delete"
-          console.log("Attempting to delete ID:", id);
-          try {
-            const docRef = doc(db, "notes", id);
-            await deleteDoc(docRef);
-            console.log("✅ Deleted successfully from Firestore");
-          } catch (e) {
-            console.error("❌ Firestore Delete Error:", e.code, e.message);
-            Alert.alert("Delete Failed", "Reason: " + e.code);
-          }
+  const onShare = async (title, text) => {
+    try {
+      await Share.share({
+        message: `${title ? title.toUpperCase() + "\n\n" : ""}${text}`,
+      });
+    } catch (error) {
+      Alert.alert(error.message);
+    }
+  };
+
+  const deleteNote = async (id) => {
+    Alert.alert(
+      "Delete Note",
+      "Are you sure?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try { await deleteDoc(doc(db, "notes", id)); } 
+            catch (e) { Alert.alert("Error", e.message); }
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
-const renderNote = ({ item }) => (
-  <View key={item.id} className="mx-6 mb-4">
-    <TouchableOpacity
-      onPress={() => {
-        console.log("Opening note:", item.id);
-        navigation.navigate("AddNote", { existingNote: item });
-      }}
-      activeOpacity={0.8}
-      className="bg-white p-5 rounded-[24px] shadow-sm shadow-slate-200 border border-slate-100 relative"
-    >
-      {/* Small Delete Button in Top Corner */}
+  const renderNote = ({ item }) => (
+    <View key={item.id} className="mx-6 mb-4">
       <TouchableOpacity
-        onPress={() => deleteNote(item.id)}
-        hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-        className="absolute top-3 right-3 bg-slate-50 h-7 w-7 rounded-full items-center justify-center z-50 border border-slate-100"
+        onPress={() => navigation.navigate("AddNote", { existingNote: item })}
+        activeOpacity={0.7}
+        // VISION PRO STYLE CARD: Dark semi-transparent background with white border
+        className="bg-white/10 p-5 rounded-[24px] border border-white/20 relative"
       >
-        <Text className="text-slate-400 font-bold text-[10px]">✕</Text>
-      </TouchableOpacity>
+        {/* DELETE BUTTON (Top Right) */}
+        <TouchableOpacity
+          onPress={() => deleteNote(item.id)}
+          hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+          className="absolute top-3 right-3 bg-red-500/20 h-8 w-8 rounded-full items-center justify-center z-50 border border-red-500/30"
+        >
+          <Ionicons name="close" size={16} color="#ef4444" />
+        </TouchableOpacity>
 
-      {/* Content Area */}
-      <View className="pr-6"> 
-        {/* pr-6 ensures text doesn't overlap the X button */}
-        {item.title ? (
-          <Text className="text-lg font-bold text-slate-800 mb-1" numberOfLines={1}>
-            {item.title}
+        {/* CONTENT */}
+        <View className="pr-8">
+          {item.title ? (
+            <Text className="text-xl font-bold text-white mb-1 shadow-sm" numberOfLines={1}>
+              {item.title}
+            </Text>
+          ) : null}
+          
+          <Text className="text-slate-300 leading-5 text-sm font-light" numberOfLines={3}>
+            {item.text}
           </Text>
-        ) : null}
-        
-        <Text className="text-slate-500 leading-5 text-sm" numberOfLines={3}>
-          {item.text}
-        </Text>
-      </View>
+        </View>
 
-      {/* Footer (Date) */}
-      <View className="mt-4 flex-row items-center">
-        <View className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-2 shadow-sm shadow-blue-400" />
-        <Text className="text-slate-300 text-[10px] font-bold uppercase tracking-widest">
-          {item.createdAt?.toDate 
-            ? item.createdAt.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) 
-            : "Just now"}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  </View>
-);
+        {/* FOOTER */}
+        <View className="mt-4 flex-row items-center justify-between border-t border-white/10 pt-3">
+          
+          {/* Date Indicator */}
+          <View className="flex-row items-center">
+            <View className="h-1.5 w-1.5 rounded-full bg-cyan-400 mr-2 shadow-[0_0_10px_cyan]" />
+            <Text className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+              {item.createdAt?.toDate 
+                ? item.createdAt.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) 
+                : "Now"}
+            </Text>
+          </View>
 
+          {/* NEON SHARE BUTTON */}
+          <TouchableOpacity
+            onPress={() => onShare(item.title, item.text)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            className="flex-row items-center bg-cyan-500/20 px-3 py-1.5 rounded-full border border-cyan-500/30"
+          >
+            <Ionicons name="share-social-outline" size={14} color="#22d3ee" />
+            <Text className="text-cyan-400 font-bold text-[10px] ml-1">SHARE</Text>
+          </TouchableOpacity>
+
+        </View>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FBFBFE]">
-      <StatusBar barStyle="dark-content" />
+    // VISION PRO BACKGROUND: Deep Dark Blue/Black
+    <SafeAreaView className="flex-1 bg-[#0f172a]">
+      <StatusBar barStyle="light-content" />
       
-      {/* Modern Header */}
-      <View className="px-8 pt-4 pb-4 flex-row justify-between items-center">
+      {/* Header */}
+      <View className="px-8 pt-4 pb-6 flex-row justify-between items-center">
         <View>
-          <Text className="text-3xl font-black text-slate-900 tracking-tight">My Notes</Text>
-          <Text className="text-slate-400 text-xs font-medium">{notes.length} saved entries</Text>
+          <Text className="text-slate-400 text-xs font-medium uppercase tracking-[3px] mb-1">Workspace</Text>
+          <Text className="text-4xl font-thin text-white tracking-tighter">
+            My <Text className="font-bold text-cyan-400">Notes</Text>
+          </Text>
         </View>
         <TouchableOpacity 
           onPress={logout}
-          className="px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm"
+          className="h-10 w-10 rounded-full bg-white/5 items-center justify-center border border-white/10"
         >
-          <Text className="text-[10px] font-black text-slate-500 uppercase">Logout</Text>
+          <Ionicons name="log-out-outline" size={18} color="#94a3b8" />
         </TouchableOpacity>
       </View>
 
-      {/* List View (Line by Line) */}
+      {/* List */}
       <FlatList
         data={notes}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
         renderItem={renderNote}
         ListEmptyComponent={
-          <View className="mt-32 items-center px-10">
-            <Text className="text-slate-300 text-center font-medium">No notes here yet.</Text>
+          <View className="mt-32 items-center px-10 opacity-50">
+            <Ionicons name="planet-outline" size={60} color="#64748b" />
+            <Text className="text-slate-500 text-center font-light mt-4">Space is empty.</Text>
+            <Text className="text-slate-600 text-center text-xs uppercase tracking-widest mt-1">Tap + to create</Text>
           </View>
         }
       />
 
-      {/* Modern Floating Action Button */}
+      {/* GLASS FAB */}
       <View className="absolute bottom-10 w-full items-center">
         <TouchableOpacity
           onPress={() => navigation.navigate("AddNote")}
           activeOpacity={0.9}
-          className="bg-blue-600 h-16 px-8 rounded-3xl flex-row items-center justify-center shadow-xl shadow-blue-400"
+          // Glowing button with blur effect logic
+          className="bg-cyan-500 h-16 px-8 rounded-full flex-row items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.5)] border border-cyan-400"
         >
-          <Text className="text-white text-3xl mr-3">+</Text>
-          <Text className="text-white font-extrabold text-sm uppercase tracking-widest">New Entry</Text>
+          <Ionicons name="add" size={28} color="white" />
+          <Text className="text-white font-bold text-sm uppercase tracking-[2px] ml-2">New Entry</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
