@@ -14,7 +14,7 @@ function Routes() {
   const { user } = useContext(AuthContext);
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ headerShown: false }} >
       {user ? (
         <Stack.Screen name="Home" component={HomeScreen} />
       ) : (
